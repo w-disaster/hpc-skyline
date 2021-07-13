@@ -1,0 +1,354 @@
+200
+100400
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+min grid size: 30, block size: 1024
+y dim: 32, avg: 1.235922
+y dim: 64, avg: 1.136508
+y dim: 96, avg: 1.133945
+y dim: 128, avg: 1.147622
+y dim: 160, avg: 1.109433
+y dim: 192, avg: 1.129338
+y dim: 224, avg: 1.157327
+y dim: 256, avg: 1.172426
+y dim: 288, avg: 1.159659
+y dim: 320, avg: 1.148956
+y dim: 352, avg: 1.118889
+y dim: 384, avg: 1.163687
+y dim: 416, avg: 1.182699
+y dim: 448, avg: 1.130219
+y dim: 480, avg: 1.165250
+y dim: 512, avg: 1.195372
+y dim: 544, avg: 1.259133
+y dim: 576, avg: 1.131867
+y dim: 608, avg: 1.186046
+y dim: 640, avg: 1.201489
+y dim: 672, avg: 1.190152
+y dim: 704, avg: 1.171050
+y dim: 736, avg: 1.207772
+y dim: 768, avg: 1.237225
+y dim: 800, avg: 1.291117
+y dim: 832, avg: 1.192055
+y dim: 864, avg: 1.140305
+y dim: 896, avg: 1.154348
+y dim: 928, avg: 1.212984
+y dim: 960, avg: 1.236697
+y dim: 992, avg: 1.271620
+y dim: 1024, avg: 1.237015
