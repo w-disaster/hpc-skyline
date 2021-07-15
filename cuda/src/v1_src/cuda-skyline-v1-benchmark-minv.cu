@@ -46,7 +46,7 @@ double* build_matrix(FILE* fd, int* N, int* D){
         token = strtok(str, s);
         for(int k = 0; k < *D && token != NULL; k++){
             /* convert ASCII string to floating-point number */
-            matrix[i * (*D) + k] = strtod(token, &ptr);
+            matrix[k * (*N) + i] = strtod(token, &ptr);
             token = strtok(NULL, s);
         }
     }
@@ -54,14 +54,14 @@ double* build_matrix(FILE* fd, int* N, int* D){
 }
 
 /* Returns true if s dominates d */
-__device__ bool dominance(double *s, double *d, int dim){
+__device__ bool dominance(double *s, double *d, int n, int dim){
     bool weakly_major = true;
     bool stricly_major = false;
     for(int i = 0; i < dim && weakly_major; i++){
-        if(s[i] < d[i]){
+        if(s[i * n] < d[i * n]){
 			 weakly_major = false;
 		}
-        if(s[i] > d[i]){
+        if(s[i * n] > d[i * n]){
 			stricly_major = true;
 		}
     }
@@ -69,41 +69,47 @@ __device__ bool dominance(double *s, double *d, int dim){
 }
 
 __global__ void copy(double *points, int *S, int n, int d){
-	const int y = blockIdx.y * blockDim.y + threadIdx.y;
-	if(y < n){
-		/* Copy the number in charge to the local memory in order
-		   to not saturate with accesses the global memory
-		 */
-		double num[MAX_DIM];
-		memcpy(num, &points[y * d], d * sizeof(double)); 
-	}
-}	
+        const int y = blockIdx.y * blockDim.y + threadIdx.y;
+        if(y < n){
+                /* Copy the number in charge to the local memory in order
+                   to perform coalesced memory accesses
+                */
+                double num[MAX_DIM];
+                //memcpy(num, &points[y * d], d * sizeof(double));
+                for(int i = 0; i < d; i++){
+                        num[i] = points[i * n + y];
+                }
+		}	
+}
 
 
 /* Kernel function */
 __global__ void skyline(double *points, int *S, int n, int d){
-	const int y = blockIdx.y * blockDim.y + threadIdx.y;
-	if(y < n){
-		/* Copy the number in charge to the local memory in order
-		   to not saturate with accesses the global memory
-		 */
-		double num[MAX_DIM];
-		memcpy(num, &points[y * d], d * sizeof(double)); 
-	
-		int is_skyline_point = 1;
-		for(int i = 0; i < n && is_skyline_point; i++){
-			/* If num is dominates by another number then it is not
-			   in the Skyline set
-			*/
-			if(i != y){
-				if(dominance(&points[i * d], num, d)){
-					is_skyline_point = 0;						 
-				}
-			}
-		}
-		/* Copy the results on the device global memory */
-		S[y] = is_skyline_point;
-	}
+        const int y = blockIdx.y * blockDim.y + threadIdx.y;
+        if(y < n){
+                /* Copy the number in charge to the local memory in order
+                   to perform coalesced memory accesses
+                */
+                //double num[MAX_DIM];
+                //memcpy(num, &points[y * d], d * sizeof(double));
+                //for(int i = 0; i < d; i++){
+                //         num[i] = points[i * n + y];
+                //}
+			
+                int is_skyline_point = 1;
+                for(int i = 0; i < n && is_skyline_point; i++){
+                        /* If num is dominates by another number then it is not
+                           in the Skyline set
+                        */
+                        if(i != y){
+                                if(dominance(&points[i], &points[y], n, d)){
+                                        is_skyline_point = 0;                                            
+                                }
+                        }
+                }
+                /* Copy the results on the device global memory */
+                S[y] = is_skyline_point;
+        }
 }
 
 int main(int argc, char* argv[]){
@@ -139,7 +145,7 @@ int main(int argc, char* argv[]){
 		for(int i = 1; i <= 32; i++){
 			int y_dim = i * 32;
 			dim3 block(1, y_dim);
-			printf("%d\n", ((*N) + y_dim - 1)/y_dim);
+			//printf("%d\n", ((*N) + y_dim - 1)/y_dim);
 			dim3 grid(1, ((*N) + y_dim - 1)/y_dim);
 			
 			/* - Kernel function call to determine the Skyline set
@@ -148,7 +154,7 @@ int main(int argc, char* argv[]){
 			 */
 		
 			double t_kernel_start = hpc_gettime();	
-			copy<<<grid, block>>>(d_points, d_S, *N, *D);
+			skyline<<<grid, block>>>(d_points, d_S, *N, *D);
 			cudaDeviceSynchronize();
 			double t_kernel_end = hpc_gettime();
 
@@ -165,7 +171,7 @@ int main(int argc, char* argv[]){
 	//}
 
 	for(int i = 1; i <= 32; i++){
-		avg[i - 1] = avg[i - 1] / 10;
+		avg[i - 1] = avg[i - 1]; /// 10;
 		printf("%d %lf\n", i * 32, avg[i - 1]);
 	}
 		
@@ -178,7 +184,7 @@ int main(int argc, char* argv[]){
 /*	for(int i = 0; i < *N; i++){
 		if(S[i]){
 			for(int k = 0; k < *D; k++){
-				printf("%lf ", points[i * (*D) + k]);
+				printf("%lf ", points[k * (*N) + i]);
 			}
 			printf("\n");
 		}
