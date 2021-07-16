@@ -44,7 +44,7 @@ double* build_matrix(FILE* fd, int* N, int* D){
         token = strtok(str, s);
         for(int k = 0; k < *D && token != NULL; k++){
             /* convert ASCII string to floating-point number */
-            matrix[k * (*N) + i] = strtod(token, &ptr);
+            matrix[i * (*D) + k] = strtod(token, &ptr);
             token = strtok(NULL, s);
         }
     }
@@ -54,17 +54,16 @@ double* build_matrix(FILE* fd, int* N, int* D){
 /* Returns true if the array s dominates the array d. 
  * Parameters:
  * - s, d: arrays of double
- * - length: number of elements of s and d
- * - offset: distance between two elements that we must read in array s, d
+ * - length: number of elements of s and d 
  */
-__device__ bool dominance(double *s, double *d, int length, int offset){
+__device__ bool dominance(double *s, double *d, int length){
     bool strictly_minor = false;
     bool strictly_major = false;
     for(int i = 0; i < length && !strictly_minor; i++){
-        if(s[i * offset] < d[i * offset]){
+        if(s[i] < d[i]){
 			 strictly_minor = true;
 		}
-        if(s[i * offset] > d[i * offset]){
+        if(s[i] > d[i]){
 			strictly_major = true;
 		}
     }
@@ -86,7 +85,7 @@ __global__ void skyline(double *points, int *S, int n, int d){
 			   in the Skyline set
 			*/
 			if(i != y){
-				if(dominance(&points[i], &points[y], d, n)){
+				if(dominance(&points[i * d], &points[y * d], d)){
 					is_skyline_point = 0;						 
 				}
 			}
@@ -141,7 +140,7 @@ int main(int argc, char* argv[]){
 	for(int i = 0; i < *N; i++){
 		if(S[i]){
 			for(int k = 0; k < *D; k++){
-				printf("%lf ", points[k * (*N) + i]);
+				printf("%lf ", points[i * (*D) + k]);
 			}
 			printf("\n");
 		}
