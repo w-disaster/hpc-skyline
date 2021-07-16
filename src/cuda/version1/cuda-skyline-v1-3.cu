@@ -85,31 +85,31 @@ __global__ void copy(double *points, int *S, int n, int d){
 
 /* Kernel function */
 __global__ void skyline(double *points, int *S, int n, int d){
-        const int y = blockIdx.y * blockDim.y + threadIdx.y;
-        if(y < n){
-                /* Copy the number in charge to the local memory in order
-                   to perform coalesced memory accesses
-                */
-                double num[MAX_DIM];
-                //memcpy(num, &points[y * d], d * sizeof(double));
-                for(int i = 0; i < d; i++){
-                         num[i] = points[i * n + y];
-                }
-			
-                int is_skyline_point = 1;
-                for(int i = 0; i < n && is_skyline_point; i++){
-                        /* If num is dominates by another number then it is not
-                           in the Skyline set
-                        */
-                        if(i != y){
-                                if(dominance(&points[i], num, n, d)){
-                                        is_skyline_point = 0;                                            
-                                }
-                        }
-                }
-                /* Copy the results on the device global memory */
-                S[y] = is_skyline_point;
-        }
+	const int y = blockIdx.y * blockDim.y + threadIdx.y;
+	if(y < n){
+		/* Copy the number in charge to the local memory in order
+		   to perform coalesced memory accesses
+		*/
+		double num[MAX_DIM];
+		//memcpy(num, &points[y * d], d * sizeof(double));
+		for(int i = 0; i < d; i++){
+			num[i] = points[i * n + y];
+		}
+	
+		int is_skyline_point = 1;
+		for(int i = 0; i < n && is_skyline_point; i++){
+			/* If num is dominates by another number then it is not
+			   in the Skyline set
+			*/
+			if(i != y){
+				if(dominance(&points[i], num, n, d)){
+						is_skyline_point = 0;                                            
+				}
+			}
+		}
+		/* Copy the results on the device global memory */
+		S[y] = is_skyline_point;
+	}
 }
 
 int main(int argc, char* argv[]){
@@ -181,15 +181,15 @@ int main(int argc, char* argv[]){
 	*/
 	S = (int*) malloc((*N) * sizeof(int));
 	cudaSafeCall(cudaMemcpy(S, d_S, (*N) * sizeof(int), cudaMemcpyDeviceToHost));
-/*	for(int i = 0; i < *N; i++){
+	/*for(int i = 0; i < *N; i++){
 		if(S[i]){
 			for(int k = 0; k < *D; k++){
 				printf("%lf ", points[k * (*N) + i]);
 			}
 			printf("\n");
 		}
-	}
-*/
+	}*/
+
 	/* Print the time spent by the kernel to determine the Skyline set */
 	//printf("%lf\n", t_kernel_end - t_kernel_start);
 	
