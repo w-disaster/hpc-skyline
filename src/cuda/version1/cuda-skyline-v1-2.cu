@@ -76,17 +76,17 @@ __device__ bool dominance(double *s, double *d, int length){
  * if any of them dominates it.
  * The result, in the end, is put in the array S, stored in the global memory. 
  */
-__global__ void skyline(double *points, int *S, int n, int d){
+__global__ void skyline(double *points, bool *S, int n, int d){
 	const int y = blockIdx.y * blockDim.y + threadIdx.y;
 	if(y < n){
-		int is_skyline_point = 1;
+		int is_skyline_point = true;
 		for(int i = 0; i < n && is_skyline_point; i++){
 			/* If num is dominates by another number then it is not
 			   in the Skyline set
 			*/
 			if(i != y){
 				if(dominance(&points[i * d], &points[y * d], d)){
-					is_skyline_point = 0;						 
+					is_skyline_point = false;						 
 				}
 			}
 		}
@@ -111,8 +111,8 @@ int main(int argc, char* argv[]){
 	cudaSafeCall(cudaMemcpy(d_points, points, size, cudaMemcpyHostToDevice));
 
 	/* Allocate space where the kernel function will store the result */
-	int *S, *d_S;
-	cudaSafeCall(cudaMalloc((void**)&d_S, (*N) * sizeof(int)));	
+	bool *S, *d_S;
+	cudaSafeCall(cudaMalloc((void**)&d_S, (*N) * sizeof(bool)));	
 
 	/* Define the block and grid dimensions */
 	dim3 block(1, WARP_SIZE);
@@ -135,8 +135,8 @@ int main(int argc, char* argv[]){
 	   - Copy the result from device memory to host's
 	   - Print the points in the Skyline set 
 	*/
-	S = (int*) malloc((*N) * sizeof(int));
-	cudaSafeCall(cudaMemcpy(S, d_S, (*N) * sizeof(int), cudaMemcpyDeviceToHost));
+	S = (bool*) malloc((*N) * sizeof(bool));
+	cudaSafeCall(cudaMemcpy(S, d_S, (*N) * sizeof(bool), cudaMemcpyDeviceToHost));
 	for(int i = 0; i < *N; i++){
 		if(S[i]){
 			for(int k = 0; k < *D; k++){

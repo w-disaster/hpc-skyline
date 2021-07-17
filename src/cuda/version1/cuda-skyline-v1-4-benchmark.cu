@@ -2,9 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-#include <omp.h>
 #include "lib/hpc.h"
-#include <cuda_runtime.h>
 
 #define LINE_LENGHT 4000
 #define WARP_SIZE 32
