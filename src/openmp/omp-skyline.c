@@ -2,15 +2,16 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-#include "hpc.h"
+#include "lib/hpc.h"
 
-#define LINE_LENGHT 1024
+#define LINE_LENGHT 4000
 
 /* This function reads the points from a file descriptor and saves
- * them in the matrix "points". Also, it stores the dimension D and
- * the number of points N onto two int memory location.
+ * them into a matrix. Also, it stores the dimension D and
+ * the number of points N onto two int memory locations.
+ 
  */
-long double** buildMatrix(FILE* fd, int* N, int* D){
+double** read_points(FILE* fd, int* N, int* D){
     char line[LINE_LENGHT];
     const size_t BUFSIZE = sizeof(line);
     
@@ -48,18 +49,21 @@ long double** buildMatrix(FILE* fd, int* N, int* D){
     return matrix;
 }
 
-bool dominance(long double* s, long double *d, int dim){
-    bool weakly_major = true;
-    bool stricly_major = false;
-    for(int i = 0; i < dim && weakly_major; i++){
-        if(s[i] < d[i]) weakly_major = false;
-        if(s[i] > d[i]) stricly_major = true;
+bool dominance(double* s, double *d, int dim){
+    bool strictly_minor = false;
+    bool strictly_major = false;
+    for(int i = 0; i < dim && !strictly_minor; i++){
+        if(s[i] < d[i]){
+			strictly_minor = true;
+		}
+        if(s[i] > d[i]){
+			striclty_major = true;
+		}
     }
-    return weakly_major && stricly_major;
+    return !strictly_minor && strictly_major;
 }
 
-bool* computeSkyline(long double** matrix, int rows, int cols){
-    
+bool* compute_skyline(long double** matrix, int rows, int cols){
     bool* S = (bool*) malloc(rows * sizeof(bool)); 
     int n_threads = omp_get_max_threads();
     printf("threads: %d\n", n_threads);
@@ -84,8 +88,21 @@ bool* computeSkyline(long double** matrix, int rows, int cols){
             }
         }
     }
+    return S;
+}
 
-    for(i = 0; i < rows; i++){
+int main(int argc, char* argv[]){
+    int* D = (int*) malloc(sizeof(int));
+    int* N = (int*) malloc(sizeof(int));
+    double** skyline_matrix = build_matrix(stdin, N, D);
+    /*for(int i = 0; i < *N; i++){
+        for(int k = 0; k < *D; k++){
+            printf("%Lf ", skyline_matrix[i][k]);
+        }
+        printf("\n");
+    }*/
+
+	for(i = 0; i < rows; i++){
         if(S[i]){
             for(j = 0; j < cols; j++){
                 printf("%Lf ", matrix[i][j]);
@@ -93,21 +110,8 @@ bool* computeSkyline(long double** matrix, int rows, int cols){
             printf("\n");
         }
     }
-    return S;
-}
-
-int main(int argc, char* argv[]){
-    int* D = (int*) malloc(sizeof(int));
-    int* N = (int*) malloc(sizeof(int));
-    long double** skyline_matrix = buildMatrix(stdin, N, D);
-    /*for(int i = 0; i < *N; i++){
-        for(int k = 0; k < *D; k++){
-            printf("%Lf ", skyline_matrix[i][k]);
-        }
-        printf("\n");
-    }*/
     double tstart = omp_get_wtime();
-    bool* skyline = computeSkyline(skyline_matrix, *N, *D);
+    bool* skyline = compute_skyline(skyline_matrix, *N, *D);
     printf("Time: %lf\n", omp_get_wtime() - tstart);
     return 0;
 }

@@ -9,10 +9,15 @@
 #define MAX_DIM 200
 
 /* This function reads the points from a file descriptor and saves
- * them in the return matrix. Also, it stores the dimension D and
+ * them into an array. Also, it stores the dimension D and
  * the number of points N onto two int memory locations.
+ * Arguments:
+ * - fd: file descriptor
+ * - N: pointer to integer where this function stores the number of points read
+ * - D: pointer to int where this function stores the dimension of the points.
+ * It returns the pointer to the allocated array containing the points.
  */
-double* build_matrix(FILE* fd, int* N, int* D){
+double* read_points(FILE* fd, int* N, int* D){
     char line[LINE_LENGHT];
     const size_t BUF_SIZE = sizeof(line);
 	    
