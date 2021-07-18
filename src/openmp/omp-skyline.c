@@ -1,3 +1,39 @@
+/****************************************************************************
+ *
+ * omp-skyline.c - Skyline set computation with OpenMP
+ *
+ * Author: Fabri Luca 
+ * Serial Number: 0000892878
+ * Email: luca.fabri@studio.unibo.it
+ * 
+ * ---------------------------------------------------------------------------
+ * 
+ * Skyline set computation with OpenMP. 
+ * Given P a set of N points with dimension D, p1, p2 two points in P,
+ * we say that p1 dominates p2 if:
+ * - for each dimension k: p1[k] >= p2[k] , 0 <= k < D;
+ * - exists at least one dimension j such that: p1[j] > p2[j] , 0 <= j < D.
+ *
+ * The Skyline set is, for definition, composed of all points in P that aren't
+ * dominated by other points in P.
+ *
+ * Compile with:
+ * gcc -Wall -Wpedantic -std=c99 -fopenmp -o omp-skyline omp-skyline.c
+ * Or from Makefile:
+ * make openmp
+ *
+ * Run with:
+ * ./omp-skyline < input_file > output_file
+ *
+ * Please not that the input_file provided as argument must contains:
+ * - The dimension of the points, in the first line. Next chars, if present, 
+ *   are ignored;
+ * - The number of points in the 2nd line;
+ * - The input set P whose points are in separed rows and each dimension value 
+ *   separated by space or tab.
+ *
+ ****************************************************************************/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -24,14 +60,12 @@ double **read_points(FILE *fd, int *N, int *D){
     char *dim;
     dim = fgets(line, BUFSIZE, fd);
     sscanf(dim, "%d", D);
-    printf("%d\n", *D);
     
     /* Read the number of points: fetch the second line until newline */
     char *n;
     n = fgets(line, BUFSIZE, fd);
     sscanf(n, "%d", N);
-    printf("%d\n", *N);
-
+    
     /* Allocate the return matrix of dimension N x D where each line contains
      * the coordinates of a point. 
      */
@@ -64,6 +98,8 @@ double **read_points(FILE *fd, int *N, int *D){
 bool dominance(double *s, double *d, int dim){
     bool strictly_minor = false;
     bool strictly_major = false;
+    /* Iterate over each dimension: 
+     * if s[i] < d[i] then s doesn't dominate d --> exit from loop and return */
     for(int i = 0; i < dim && !strictly_minor; i++){
         if(s[i] < d[i]){
 			strictly_minor = true;
@@ -72,6 +108,9 @@ bool dominance(double *s, double *d, int dim){
 			strictly_major = true;
 		}
     }
+    /* If there aren't elements strictly minor and exist at least on element
+     * strictly major then s dominates d
+     */
     return !strictly_minor && strictly_major;
 }
 
@@ -82,9 +121,10 @@ bool dominance(double *s, double *d, int dim){
  * Returns an array of rows booleans where array[i] == true, 0 <= i < rows, 
  * if the i-th element is in the Skyline set, array[i] == false otherwise.
  */
-bool* compute_skyline(double **points, int rows, int cols){
+bool* compute_skyline(double **points, int rows, int cols, int *skyline_length){
     bool *S = (bool*) malloc(rows * sizeof(bool)); 
     int n_threads = omp_get_max_threads();
+    int S_length = rows;
     int i, j;
     
     /* This section creates a pool of threads:
@@ -93,9 +133,10 @@ bool* compute_skyline(double **points, int rows, int cols){
      * we assign false into the corrisponding element of the return array to
      * indicate that it's not in the Skyline set.
      */
-#pragma omp parallel default(none) num_threads(n_threads) private(i, j) shared(S, rows, cols, points, n_threads)
+#pragma omp parallel default(none) num_threads(n_threads) private(i, j) \
+    shared(S, S_length, rows, cols, points, n_threads)
     {   
-        /* Compute local start and local end indexes, initialize array S*/ 
+        /* Compute local start and local end indexes, initialize array S */ 
         int thread_id = omp_get_thread_num();
         int local_start = rows * thread_id / n_threads;
         int local_end = rows * (thread_id + 1) / n_threads;
@@ -107,37 +148,53 @@ bool* compute_skyline(double **points, int rows, int cols){
                 for(j = 0; j < rows; j++){
                     if(S[j] && dominance(points[i], points[j], cols)){
 #pragma omp critical
-                        S[j] = false;
+                        {
+                            S[j] = false;
+                            S_length --;
+                        }
                     }
                 } 
             }
         }
     }
+    *skyline_length = S_length;
     return S;
 }
 
+void print_skyline(FILE* fd, bool *S, double **points, int N, int D, int K){
+    int i, j;
+    /* Print D, K */
+    fprintf(fd, "%d\n%d\n", D, K);
+
+    /* Print the Skyline set and the time spent */
+    for(i = 0; i < N; i++){
+        if(S[i]){
+            for(j = 0; j < D; j++){
+                fprintf(fd, "%lf ", points[i][j]);
+            }
+            fprintf(fd, "\n");
+        }
+    }
+}
+
 int main(int argc, char* argv[]){
+    /* int pointers to store dimension D, cardinality N of the input set
+     * and Skyline cardinality K.
+     */
     int *D = (int*) malloc(sizeof(int));
     int *N = (int*) malloc(sizeof(int));
+    int *K = (int*) malloc(sizeof(int));
+
     /* Read the points from stdin */
     double **points = read_points(stdin, N, D);
 
     /* Calculate the Skyline set and measure time spent */
     double t_start = omp_get_wtime();
-    bool *skyline = compute_skyline(points, *N, *D);
+    bool *skyline = compute_skyline(points, *N, *D, K);
     double t_end = omp_get_wtime();
 
-    /* Print the Skyline set and the time spent */
-    int i, j;
-    for(i = 0; i < *N; i++){
-        if(skyline[i]){
-            for(j = 0; j < *D; j++){
-                printf("%lf ", points[i][j]);
-            }
-            printf("\n");
-        }
-    }
-    printf("Time: %lf\n", t_end - t_start);
+    print_skyline(stdout, skyline, points, *N, *D, *K);
+    fprintf(stdout, "Time: %lf\n", t_end - t_start);
     
     return EXIT_SUCCESS;
 }
