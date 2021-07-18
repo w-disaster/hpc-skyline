@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <omp.h>
 #include "lib/hpc.h"
 
 #define LINE_LENGHT 4000
@@ -9,27 +10,33 @@
 /* This function reads the points from a file descriptor and saves
  * them into a matrix. Also, it stores the dimension D and
  * the number of points N onto two int memory locations.
- 
+ * Parameters:
+ * - fd: file descriptor
+ * - N: pointer to integer where this function stores the number of points read
+ * - D: pointer to int where this function stores the dimension of the points.
+ * It returns the double pointer to the allocated matrix containing the points.
  */
-double** read_points(FILE* fd, int* N, int* D){
+double **read_points(FILE *fd, int *N, int *D){
     char line[LINE_LENGHT];
     const size_t BUFSIZE = sizeof(line);
     
     /* Read the dimension: fetch the first line until space */
-    char* dim;
+    char *dim;
     dim = fgets(line, BUFSIZE, fd);
     sscanf(dim, "%d", D);
     printf("%d\n", *D);
     
     /* Read the number of points: fetch the second line until newline */
-    char* n;
+    char *n;
     n = fgets(line, BUFSIZE, fd);
     sscanf(n, "%d", N);
     printf("%d\n", *N);
 
-    /* Allocate the matrix */
-    long double **matrix = (long double**) malloc((*N) * sizeof(long double*));
-    for(int i = 0; i < (*N); i++) matrix[i] = (long double *) malloc((*D) * sizeof(long double));
+    /* Allocate the return matrix of dimension N x D where each line contains
+     * the coordinates of a point. 
+     */
+    double **points = (double**) malloc((*N) * sizeof(double*));
+    for(int i = 0; i < (*N); i++) points[i] = (double*) malloc((*D) * sizeof(double));
 
     char* str;
     const char* s = " ";
@@ -42,14 +49,19 @@ double** read_points(FILE* fd, int* N, int* D){
         token = strtok(str, s);
         for(int k = 0; k < *D && token != NULL; k++){
             /* convert ASCII string to floating-point number */
-            matrix[i][k] = strtod(token, &ptr);
+            points[i][k] = strtod(token, &ptr);
             token = strtok(NULL, s);
         }
     }
-    return matrix;
+    return points;
 }
 
-bool dominance(double* s, double *d, int dim){
+/* Returns true if the array s dominates the array d. 
+ * Parameters:
+ * - s, d: arrays of double
+ * - dim: number of elements of s and d 
+ */
+bool dominance(double *s, double *d, int dim){
     bool strictly_minor = false;
     bool strictly_major = false;
     for(int i = 0; i < dim && !strictly_minor; i++){
@@ -57,31 +69,44 @@ bool dominance(double* s, double *d, int dim){
 			strictly_minor = true;
 		}
         if(s[i] > d[i]){
-			striclty_major = true;
+			strictly_major = true;
 		}
     }
     return !strictly_minor && strictly_major;
 }
 
-bool* compute_skyline(long double** matrix, int rows, int cols){
-    bool* S = (bool*) malloc(rows * sizeof(bool)); 
+/* This function computes the Skyline set, Given:
+ * - points, a matrix containing the points
+ * - rows, the number of points
+ * - cols, the dimension of the points
+ * Returns an array of rows booleans where array[i] == true, 0 <= i < rows, 
+ * if the i-th element is in the Skyline set, array[i] == false otherwise.
+ */
+bool* compute_skyline(double **points, int rows, int cols){
+    bool *S = (bool*) malloc(rows * sizeof(bool)); 
     int n_threads = omp_get_max_threads();
-    printf("threads: %d\n", n_threads);
     int i, j;
     
-#pragma omp parallel default(none) num_threads(n_threads) private(i, j) shared(S, rows, cols, matrix, n_threads)
-    {    
+    /* This section creates a pool of threads:
+     * each one compares the assigned points (of its subset) with all the others
+     * in the set. If a point in the set is dominated by one of the subset then
+     * we assign false into the corrisponding element of the return array to
+     * indicate that it's not in the Skyline set.
+     */
+#pragma omp parallel default(none) num_threads(n_threads) private(i, j) shared(S, rows, cols, points, n_threads)
+    {   
+        /* Compute local start and local end indexes, initialize array S*/ 
         int thread_id = omp_get_thread_num();
         int local_start = rows * thread_id / n_threads;
         int local_end = rows * (thread_id + 1) / n_threads;
         for(i = local_start; i < local_end; i++) S[i] = true;
 #pragma omp barrier    
-        
+        /* Once S is full initialized, start computing Skyline set */
         for(i = local_start; i < local_end; i++){
             if(S[i]){
                 for(j = 0; j < rows; j++){
-                    if(S[j] && dominance(matrix[i], matrix[j], cols)){
-//#pragma omp critical
+                    if(S[j] && dominance(points[i], points[j], cols)){
+#pragma omp critical
                         S[j] = false;
                     }
                 } 
@@ -92,26 +117,27 @@ bool* compute_skyline(long double** matrix, int rows, int cols){
 }
 
 int main(int argc, char* argv[]){
-    int* D = (int*) malloc(sizeof(int));
-    int* N = (int*) malloc(sizeof(int));
-    double** skyline_matrix = build_matrix(stdin, N, D);
-    /*for(int i = 0; i < *N; i++){
-        for(int k = 0; k < *D; k++){
-            printf("%Lf ", skyline_matrix[i][k]);
-        }
-        printf("\n");
-    }*/
+    int *D = (int*) malloc(sizeof(int));
+    int *N = (int*) malloc(sizeof(int));
+    /* Read the points from stdin */
+    double **points = read_points(stdin, N, D);
 
-	for(i = 0; i < rows; i++){
-        if(S[i]){
-            for(j = 0; j < cols; j++){
-                printf("%Lf ", matrix[i][j]);
+    /* Calculate the Skyline set and measure time spent */
+    double t_start = omp_get_wtime();
+    bool *skyline = compute_skyline(points, *N, *D);
+    double t_end = omp_get_wtime();
+
+    /* Print the Skyline set and the time spent */
+    int i, j;
+    for(i = 0; i < *N; i++){
+        if(skyline[i]){
+            for(j = 0; j < *D; j++){
+                printf("%lf ", points[i][j]);
             }
             printf("\n");
         }
     }
-    double tstart = omp_get_wtime();
-    bool* skyline = compute_skyline(skyline_matrix, *N, *D);
-    printf("Time: %lf\n", omp_get_wtime() - tstart);
-    return 0;
+    printf("Time: %lf\n", t_end - t_start);
+    
+    return EXIT_SUCCESS;
 }

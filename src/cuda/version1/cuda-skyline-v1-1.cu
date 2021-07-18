@@ -17,7 +17,7 @@
  * - D: pointer to int where this function stores the dimension of the points.
  * It returns the pointer to the allocated array containing the points.
  */
-double* read_points(FILE* fd, int* N, int* D){
+double *read_points(FILE* fd, int* N, int* D){
     char line[LINE_LENGHT];
     const size_t BUF_SIZE = sizeof(line);
 	    
@@ -33,10 +33,10 @@ double* read_points(FILE* fd, int* N, int* D){
     sscanf(n, "%d", N);
     printf("%d\n", *N);
 
-    /* Allocate the matrix (N x D), where each line i contains the values
-	   of the points on that dimension i.
+    /* Allocate the return array with N x D elements: points[0...D-1] contains
+       the 1st point, points[D...D*2-1] the 2nd and so on.
 	*/
-    double *matrix = (double*) malloc((*N) * (*D) * sizeof(double));
+    double *points = (double*) malloc((*N) * (*D) * sizeof(double));
 	
     char* str;
     const char* s = " ";
@@ -49,11 +49,11 @@ double* read_points(FILE* fd, int* N, int* D){
         token = strtok(str, s);
         for(int k = 0; k < *D && token != NULL; k++){
             /* convert ASCII string to floating-point number */
-            matrix[i * (*D) + k] = strtod(token, &ptr);
+            points[i * (*D) + k] = strtod(token, &ptr);
             token = strtok(NULL, s);
         }
     }
-    return matrix;
+    return points;
 }
 
 /* Returns true if the array s dominates the array d. 
@@ -81,7 +81,7 @@ __device__ bool dominance(double *s, double *d, int length){
  * if any of them dominates it.
  * The result, in the end, is put in the array S, stored in the global memory. 
  */
-__global__ void skyline(double *points, bool *S, int n, int d){
+__global__ void compute_skyline(double *points, bool *S, int n, int d){
 	const int y = blockIdx.y * blockDim.y + threadIdx.y;
 	if(y < n){
 		/* Copy the number in charge to the local memory in order
@@ -106,18 +106,18 @@ __global__ void skyline(double *points, bool *S, int n, int d){
 	}
 }
 
-int main(int argc, char* argv[]){
-   	/* Allocate memory to store the number of points, them dimension and the points */
-	int* D = (int*) malloc(sizeof(int));
-    int* N = (int*) malloc(sizeof(int));
-    double* points = build_matrix(stdin, N, D);
+int main(int argc, char *argv[]){
+   	/* Allocate memory to store the number of points, the dimension and the number of points */
+	int *D = (int*) malloc(sizeof(int));
+    int *N = (int*) malloc(sizeof(int));
+    double *points = read_points(stdin, N, D);
 
 	/* - Define the matrix dimension, 
 	   - Allocate space on the device global memory 
 	   - Copy the array points on the allocated space
 	 */
 	const size_t size = (*N) * (*D) * sizeof(double);
-    double* d_points;
+    double *d_points;
 	cudaSafeCall(cudaMalloc((void**)&d_points, size));
 	cudaSafeCall(cudaMemcpy(d_points, points, size, cudaMemcpyHostToDevice));
 
@@ -138,7 +138,7 @@ int main(int argc, char* argv[]){
 	cudaEventCreate(&t_kernel_stop);	
 	
 	cudaEventRecord(t_kernel_start);
-	skyline<<<grid, block>>>(d_points, d_S, *N, *D);
+    compute_skyline<<<grid, block>>>(d_points, d_S, *N, *D);
 	cudaEventRecord(t_kernel_stop);
 	cudaCheckError();	
 	
@@ -168,5 +168,5 @@ int main(int argc, char* argv[]){
 	free(S);
 	free(D);
 	free(N);
-    return 0;
+    return EXIT_SUCCESS;
 }
