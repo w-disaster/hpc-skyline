@@ -43,13 +43,16 @@
 
 #define LINE_LENGHT 4000
 
-/* This function reads the points from a file descriptor and saves
+/* 
+ * This function reads the points from a file descriptor and saves
  * them into a matrix. Also, it stores the dimension D and
  * the number of points N onto two int memory locations.
+ * 
  * Parameters:
  * - fd: file descriptor
  * - N: pointer to integer where this function stores the number of points read
  * - D: pointer to int where this function stores the dimension of the points.
+ * 
  * It returns the double pointer to the allocated matrix containing the points.
  */
 double **read_points(FILE *fd, int *N, int *D){
@@ -90,7 +93,8 @@ double **read_points(FILE *fd, int *N, int *D){
     return points;
 }
 
-/* Returns true if the array s dominates the array d. 
+/* 
+ * Returns true if the array s dominates the array d. 
  * Parameters:
  * - s, d: arrays of double
  * - dim: number of elements of s and d 
@@ -114,19 +118,22 @@ bool dominance(double *s, double *d, int dim){
     return !strictly_minor && strictly_major;
 }
 
-/* This function computes the Skyline set, Given:
- * - points, a matrix containing the points
- * - rows, the number of points
- * - cols, the dimension of the points
+/* 
+ * This function computes the Skyline set, Given:
+ * - points, a matrix containing the points;
+ * - rows, the number of points;
+ * - cols, the dimension of the points;
+ * - skyline_length, pointer to int to store the cardinality 
+ *   of the Skyline set.
+ *
  * Returns an array of rows booleans where array[i] == true, 0 <= i < rows, 
  * if the i-th element is in the Skyline set, array[i] == false otherwise.
  */
 bool* compute_skyline(double **points, int rows, int cols, int *skyline_length){
     bool *S = (bool*) malloc(rows * sizeof(bool)); 
     int n_threads = omp_get_max_threads();
-    int S_length = rows;
     int i, j;
-    
+    int S_length[n_threads];
     /* This section creates a pool of threads:
      * each one compares the assigned points (of its subset) with all the others
      * in the set. If a point in the set is dominated by one of the subset then
@@ -140,6 +147,7 @@ bool* compute_skyline(double **points, int rows, int cols, int *skyline_length){
         int thread_id = omp_get_thread_num();
         int local_start = rows * thread_id / n_threads;
         int local_end = rows * (thread_id + 1) / n_threads;
+		S_length[thread_id] = local_end - local_start;
         for(i = local_start; i < local_end; i++) S[i] = true;
 #pragma omp barrier    
         /* Once S is full initialized, start computing Skyline set */
@@ -148,25 +156,32 @@ bool* compute_skyline(double **points, int rows, int cols, int *skyline_length){
                 for(j = 0; j < rows; j++){
                     if(S[j] && dominance(points[i], points[j], cols)){
 #pragma omp critical
-                        {
                             S[j] = false;
-                            S_length --;
-                        }
+							S_length[thread_id] --;				
                     }
                 } 
             }
         }
     }
-    *skyline_length = S_length;
+	*skyline_length = 0;
+	for(int i = 0; i < n_threads; i++){
+		*skyline_length += S_length[i];
+	}
     return S;
 }
 
+/*
+ * This function prints to the file descriptor fd given as parameter:
+ * - The dimension D of the points;
+ * - The cardinality K of the Skyline set;
+ * - The Skyline set.
+ */
 void print_skyline(FILE* fd, bool *S, double **points, int N, int D, int K){
     int i, j;
     /* Print D, K */
     fprintf(fd, "%d\n%d\n", D, K);
 
-    /* Print the Skyline set and the time spent */
+    /* Print the Skyline set */
     for(i = 0; i < N; i++){
         if(S[i]){
             for(j = 0; j < D; j++){
@@ -193,7 +208,9 @@ int main(int argc, char* argv[]){
     bool *skyline = compute_skyline(points, *N, *D, K);
     double t_end = omp_get_wtime();
 
+	/* Print Skyline set */
     print_skyline(stdout, skyline, points, *N, *D, *K);
+	/* Print the time spent */
     fprintf(stdout, "Time: %lf\n", t_end - t_start);
     
     return EXIT_SUCCESS;
