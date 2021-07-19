@@ -147,7 +147,7 @@ bool* compute_skyline(double **points, int rows, int cols, int *skyline_length){
         int thread_id = omp_get_thread_num();
         int local_start = rows * thread_id / n_threads;
         int local_end = rows * (thread_id + 1) / n_threads;
-		S_length[thread_id] = local_end - local_start;
+		S_length[thread_id] = 0;
         for(i = local_start; i < local_end; i++) S[i] = true;
 #pragma omp barrier    
         /* Once S is full initialized, start computing Skyline set */
@@ -155,14 +155,20 @@ bool* compute_skyline(double **points, int rows, int cols, int *skyline_length){
             if(S[i]){
                 for(j = 0; j < rows; j++){
                     if(S[j] && dominance(points[i], points[j], cols)){
-#pragma omp critical
-                            S[j] = false;
-							S_length[thread_id] --;				
+#pragma omp atomic write 
+                        S[j] = false;            
                     }
                 } 
             }
         }
+#pragma omp barrier
+        for(i = local_start; i < local_end; i++) {
+            if(S[i]){
+                S_length[thread_id]++;
+            }
+        }
     }
+    /* Sum all partial lengths */ 
 	*skyline_length = 0;
 	for(int i = 0; i < n_threads; i++){
 		*skyline_length += S_length[i];
