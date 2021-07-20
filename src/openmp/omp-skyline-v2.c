@@ -131,9 +131,9 @@ bool dominance(double *s, double *d, int dim){
  */
 bool* compute_skyline(double **points, int rows, int cols, int *skyline_card){
     bool *S = (bool*) malloc(rows * sizeof(bool));
-    int n_threads = omp_get_max_threads();
-    int S_card[n_threads]; 
+    int n_threads = omp_get_max_threads(); 
     int i, j;
+    *skyline_card = 0;
     
     /* This section creates a pool of threads:
      * each one compares the assigned points (of its subset) with all the others
@@ -142,31 +142,27 @@ bool* compute_skyline(double **points, int rows, int cols, int *skyline_card){
      * indicate that it's not in the Skyline set.
      */
 #pragma omp parallel default(none) num_threads(n_threads) private(i, j) \
-    shared(S, S_card, rows, cols, points, n_threads)
+    shared(S, rows, cols, points, n_threads)
     {   
         /* Compute local start and local end indexes, initialize array S*/ 
         int thread_id = omp_get_thread_num();
         int local_start = rows * thread_id / n_threads;
         int local_end = rows * (thread_id + 1) / n_threads;
-        S_card[thread_id] = local_end - local_start;
+        int local_s_card = local_end - local_start;
   
         /* Start computing Skyline set */
         for(i = local_start; i < local_end; i++){
             S[i] = true;
-                for(j = 0; j < rows && S[i]; j++){
-                    if(dominance(points[j], points[i], cols)){
-                        S[i] = false;
-                        S_card[thread_id]--;
-                    }
-                }  
+            for(j = 0; j < rows && S[i]; j++){
+                if(dominance(points[j], points[i], cols)){
+                    S[i] = false;
+                    local_s_card--;
+                }
+            }  
         }
+#pragma omp atomic
+        *skyline_card += local_s_card;
     }
-
-    /* Sum all partial cardinalities */
-    *skyline_card = 0;
-    for(int i = 0; i < n_threads; i++){
-            *skyline_card += S_card[i];
-    } 
     return S;
 }
 
