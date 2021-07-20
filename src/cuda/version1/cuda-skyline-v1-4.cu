@@ -1,3 +1,39 @@
+/****************************************************************************
+ *
+ * cuda-skyline.cu - Skyline set computation with CUDA
+ *
+ * Author: Fabri Luca 
+ * Serial Number: 0000892878
+ * Email: luca.fabri@studio.unibo.it
+ * 
+ * ---------------------------------------------------------------------------
+ * 
+ * Skyline set computation with CUDA. 
+ * Given P a set of N points with dimension D, p1, p2 two points in P,
+ * we say that p1 dominates p2 if:
+ * - for each dimension k: p1[k] >= p2[k] , 0 <= k < D;
+ * - exists at least one dimension j such that: p1[j] > p2[j] , 0 <= j < D.
+ *
+ * The Skyline set is, for definition, composed of all points in P that aren't
+ * dominated by other points in P.
+ *
+ * Compile with:
+ * nvcc -o cuda-skyline --gpu-architecture 30 --compute_30 cuda-skyline.cu
+ * Or from Makefile:
+ * make cuda
+ *
+ * Run with:
+ * ./cuda-skyline < input_file > output_file
+ *
+ * Please not that the input_file provided as argument must contains:
+ * - The dimension of the points, in the first line. Next chars, if present, 
+ *   are ignored;
+ * - The number of points in the 2nd line;
+ * - The input set P whose points are in separed rows and each dimension value 
+ *   separated by space or tab.
+ *
+ ****************************************************************************/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -12,7 +48,7 @@
  * them in the return matrix. Also, it stores the dimension D and
  * the number of points N onto two int memory locations.
  */
-double* build_matrix(FILE* fd, int* N, int* D){
+double* read_points(FILE* fd, int* N, int* D){
     char line[LINE_LENGHT];
     const size_t BUF_SIZE = sizeof(line);
 	    
@@ -60,6 +96,8 @@ double* build_matrix(FILE* fd, int* N, int* D){
 __device__ bool dominance(double *s, double *d, int length, int offset){
     bool strictly_minor = false;
     bool strictly_major = false;
+    /* Iterate over each index: 
+     * if s[i] < d[i] then s doesn't dominate d --> exit from loop and return */
     for(int i = 0; i < length && !strictly_minor; i++){
         if(s[i * offset] < d[i * offset]){
 			 strictly_minor = true;
@@ -68,6 +106,9 @@ __device__ bool dominance(double *s, double *d, int length, int offset){
 			strictly_major = true;
 		}
     }
+    /* If there aren't elements strictly minor and exist at least on element
+     * strictly major then s dominates d
+     */
     return !strictly_minor && strictly_major;
 }
 
@@ -77,7 +118,7 @@ __device__ bool dominance(double *s, double *d, int length, int offset){
  * if any of them dominates it.
  * The result, in the end, is put in the array S, stored in the global memory. 
  */
-__global__ void skyline(double *points, bool *S, int n, int d){
+__global__ void skyline(double *points, bool *S, int *k, int n, int d){
 	const int y = blockIdx.y * blockDim.y + threadIdx.y;
 	if(y < n){
 		bool is_skyline_point = true;
@@ -93,14 +134,37 @@ __global__ void skyline(double *points, bool *S, int n, int d){
 		}
 		/* Copy the results on the device global memory */
 		S[y] = is_skyline_point;
+        atomicAdd(k, is_skyline_point); 
 	}
+}
+
+/*
+ * This function prints to the file descriptor fd given as parameter:
+ * - The dimension D of the points;
+ * - The cardinality K of the Skyline set;
+ * - The Skyline set.
+ */
+void print_skyline(FILE* fd, bool *S, double *points, int N, int D, int K){
+    int i, j;
+    /* Print D, K */
+    fprintf(fd, "%d\n%d\n", D, K);
+
+    /* Print the Skyline set */
+    for(i = 0; i < N; i++){
+        if(S[i]){
+            for(j = 0; j < D; j++){
+                fprintf(fd, "%lf ", points[j * N + i]);
+            }
+            fprintf(fd, "\n");
+        }
+    }
 }
 
 int main(int argc, char* argv[]){
    	/* Allocate memory to store the number of points, them dimension and the points */
 	int* D = (int*) malloc(sizeof(int));
     int* N = (int*) malloc(sizeof(int));
-    double* points = build_matrix(stdin, N, D);
+    double* points = read_points(stdin, N, D);
 
 	/* - Define the matrix dimension, 
 	   - Allocate space on the device global memory 
@@ -113,7 +177,13 @@ int main(int argc, char* argv[]){
 
 	/* Allocate space where the kernel function will store the result */
 	bool *S, *d_S;
-	cudaSafeCall(cudaMalloc((void**)&d_S, (*N) * sizeof(bool)));	
+	cudaSafeCall(cudaMalloc((void**)&d_S, (*N) * sizeof(bool)));
+
+    int *K, *d_K;
+    K = (int*) malloc(sizeof(int));
+    *K = 0;
+    cudaSafeCall(cudaMalloc((void**)&d_K, sizeof(int)));    
+    cudaSafeCall(cudaMemcpy(d_K, K, sizeof(int), cudaMemcpyHostToDevice));
 
 	/* Define the block and grid dimensions */
 	dim3 block(1, WARP_SIZE * 2);
@@ -128,35 +198,32 @@ int main(int argc, char* argv[]){
 	cudaEventCreate(&t_kernel_stop);	
 	
 	cudaEventRecord(t_kernel_start);
-	skyline<<<grid, block>>>(d_points, d_S, *N, *D);
+	skyline<<<grid, block>>>(d_points, d_S, d_K, *N, *D);
 	cudaEventRecord(t_kernel_stop);
 	cudaCheckError();	
 	
 	/* - Allocate space on heap (host memory) in order to store the result
 	   - Copy the result from device memory to host's
+       - Copy the Skyline cardinality from device to host memory
 	   - Print the points in the Skyline set 
 	*/
 	S = (bool*) malloc((*N) * sizeof(bool));
 	cudaSafeCall(cudaMemcpy(S, d_S, (*N) * sizeof(bool), cudaMemcpyDeviceToHost));
-	for(int i = 0; i < *N; i++){
-		if(S[i]){
-			for(int k = 0; k < *D; k++){
-				printf("%lf ", points[k * (*N) + i]);
-			}
-			printf("\n");
-		}
-	}
+    cudaSafeCall(cudaMemcpy(K, d_K, sizeof(int), cudaMemcpyDeviceToHost));
+    print_skyline(stdout, S, points, *N, *D, *K);
 
 	/* Print the time spent  by the kernel to determine the Skyline set */
 	float milliseconds = 0;
 	cudaEventElapsedTime(&milliseconds, t_kernel_start, t_kernel_stop);	
-	printf("%f\n", milliseconds / 1000);
+	fprintf(stdout, "%f\n", milliseconds / 1000);
 	
 	/* Free space on device and host heap memory */
 	cudaFree(d_points);
+    cudaFree(d_K);
 	free(points);
 	free(S);
 	free(D);
 	free(N);
+    free(K);
     return 0;
 }
