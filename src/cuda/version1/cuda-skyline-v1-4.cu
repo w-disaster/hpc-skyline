@@ -42,7 +42,6 @@
 
 #define LINE_LENGHT 4000
 #define WARP_SIZE 32
-#define MAX_DIM 200
 
 /* This function reads the points from a file descriptor and saves
  * them in the return matrix. Also, it stores the dimension D and
@@ -56,14 +55,12 @@ double* read_points(FILE* fd, int* N, int* D){
     char* dim;
     dim = fgets(line, BUF_SIZE, fd);
     sscanf(dim, "%d", D);
-    printf("%d\n", *D);
     
     /* Read the number of points: fetch the second line until newline */
     char* n;
     n = fgets(line, BUF_SIZE, fd);
     sscanf(n, "%d", N);
-    printf("%d\n", *N);
-
+    
     /* Allocate the matrix (N x D), where each line i contains the values
 	   of the points on that dimension i.
 	*/
@@ -118,7 +115,7 @@ __device__ bool dominance(double *s, double *d, int length, int offset){
  * if any of them dominates it.
  * The result, in the end, is put in the array S, stored in the global memory. 
  */
-__global__ void skyline(double *points, bool *S, int *k, int n, int d){
+__global__ void compute_skyline(double *points, bool *S, int *k, int n, int d){
 	const int y = blockIdx.y * blockDim.y + threadIdx.y;
 	if(y < n){
 		bool is_skyline_point = true;
@@ -161,6 +158,7 @@ void print_skyline(FILE* fd, bool *S, double *points, int N, int D, int K){
 }
 
 int main(int argc, char* argv[]){
+	double t_start = hpc_gettime();
    	/* Allocate memory to store the number of points, them dimension and the points */
 	int* D = (int*) malloc(sizeof(int));
     int* N = (int*) malloc(sizeof(int));
@@ -179,6 +177,7 @@ int main(int argc, char* argv[]){
 	bool *S, *d_S;
 	cudaSafeCall(cudaMalloc((void**)&d_S, (*N) * sizeof(bool)));
 
+	/* Allocate space in order to store the cardinality of the Skyline set */
     int *K, *d_K;
     K = (int*) malloc(sizeof(int));
     *K = 0;
@@ -193,30 +192,25 @@ int main(int argc, char* argv[]){
 	   - Calculate the time spent 
 	   - Check for errors occurred in the GPU
 	*/
-	cudaEvent_t t_kernel_start, t_kernel_stop;
-	cudaEventCreate(&t_kernel_start);
-	cudaEventCreate(&t_kernel_stop);	
+
+	compute_skyline<<<grid, block>>>(d_points, d_S, d_K, *N, *D);
 	
-	cudaEventRecord(t_kernel_start);
-	skyline<<<grid, block>>>(d_points, d_S, d_K, *N, *D);
-	cudaEventRecord(t_kernel_stop);
+	/* While Kernel function is executing on device, allocate memory on heap 
+	 * in order to store the result 
+     */
+	S = (bool*) malloc((*N) * sizeof(bool));
+
+	/* Wait the Kernel to finish and check errors */
 	cudaCheckError();	
-	
-	/* - Allocate space on heap (host memory) in order to store the result
-	   - Copy the result from device memory to host's
+		
+	/* - Copy the result from device memory to host's
        - Copy the Skyline cardinality from device to host memory
 	   - Print the points in the Skyline set 
 	*/
-	S = (bool*) malloc((*N) * sizeof(bool));
 	cudaSafeCall(cudaMemcpy(S, d_S, (*N) * sizeof(bool), cudaMemcpyDeviceToHost));
     cudaSafeCall(cudaMemcpy(K, d_K, sizeof(int), cudaMemcpyDeviceToHost));
     print_skyline(stdout, S, points, *N, *D, *K);
 
-	/* Print the time spent  by the kernel to determine the Skyline set */
-	float milliseconds = 0;
-	cudaEventElapsedTime(&milliseconds, t_kernel_start, t_kernel_stop);	
-	fprintf(stdout, "%f\n", milliseconds / 1000);
-	
 	/* Free space on device and host heap memory */
 	cudaFree(d_points);
     cudaFree(d_K);
@@ -225,5 +219,8 @@ int main(int argc, char* argv[]){
 	free(D);
 	free(N);
     free(K);
+
+	/* Print the time spent  by the kernel to determine the Skyline set */
+	fprintf(stdout, "%lf\n", hpc_gettime() - t_start);	
     return 0;
 }
