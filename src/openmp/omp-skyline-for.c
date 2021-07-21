@@ -2,9 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-#include "hpc.h"
+#include "lib/hpc.h"
 
-#define LINE_LENGHT 1024
+#define LINE_LENGHT 4000
 
 /* This function reads the points from a file descriptor and saves
  * them in the matrix "points". Also, it stores the dimension D and
@@ -64,20 +64,18 @@ bool* computeSkyline(long double** matrix, int rows, int cols){
     int n_threads = omp_get_max_threads();
     int i, j;
     
-#pragma omp parallel for default(none) private(i) shared(S, rows)
-    for(i = 0; i < rows; i++) S[i] = true;
+//#pragma omp parallel for default(none) private(i) shared(S, rows)
+//    for(i = 0; i < rows; i++) S[i] = true;
 
-#pragma omp parallel for default(none) private(i, j) shared(S, matrix, rows, cols)
+#pragma omp parallel for default(none) private(i, j) schedule(dynamic) shared(S, matrix, rows, cols)
         for(i = 0; i < rows; i++){
-            if(S[i]){
-                for(j = 0; j < rows; j++){
-                    if(S[j] && dominance(matrix[i], matrix[j], cols)){
-//#pragma omp critical
-                        S[j] = false;
+            S[i] = true;
+                for(j = 0; j < rows && S[i]; j++){
+                    if(dominance(matrix[j], matrix[i], cols)){
+                        S[i] = false;
                     }
                 } 
             }
-        }
 
 
     for(i = 0; i < rows; i++){

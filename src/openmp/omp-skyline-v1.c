@@ -39,7 +39,6 @@
 #include <string.h>
 #include <stdbool.h>
 #include <omp.h>
-#include "lib/hpc.h"
 
 #define LINE_LENGHT 4000
 
@@ -205,7 +204,9 @@ void print_skyline(FILE* fd, bool *S, double **points, int N, int D, int K){
     }
 }
 
-int main(int argc, char* argv[]){
+int main(void){
+    double t_start = omp_get_wtime();
+
     /* int pointers to store dimension D, cardinality N of the input set
      * and Skyline cardinality K.
      */
@@ -217,14 +218,13 @@ int main(int argc, char* argv[]){
     double **points = read_points(stdin, N, D);
 
     /* Calculate the Skyline set and measure time spent */
-    double t_start = omp_get_wtime();
     bool *skyline = compute_skyline(points, *N, *D, K);
-    double t_end = omp_get_wtime();
-
+   
 	/* Print Skyline set */
     print_skyline(stdout, skyline, points, *N, *D, *K);
-	/* Print the time spent */
+	
+    double t_end = omp_get_wtime();
+    /* Print the time spent */
     fprintf(stdout, "Time: %lf\n", t_end - t_start);
-    
     return EXIT_SUCCESS;
 }
