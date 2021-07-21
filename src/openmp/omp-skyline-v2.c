@@ -142,7 +142,7 @@ bool* compute_skyline(double **points, int rows, int cols, int *skyline_card){
      * indicate that it's not in the Skyline set.
      */
 #pragma omp parallel default(none) num_threads(n_threads) private(i, j) \
-    shared(S, rows, cols, points, n_threads)
+    shared(S, skyline_card, rows, cols, points, n_threads)
     {   
         /* Compute local start and local end indexes, initialize array S*/ 
         int thread_id = omp_get_thread_num();
