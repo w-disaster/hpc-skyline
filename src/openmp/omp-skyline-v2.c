@@ -84,7 +84,7 @@ double **read_points(FILE *fd, int *N, int *D){
         /* Split the string read on s=" " separator and fetch the values */
         token = strtok(str, s);
         for(int k = 0; k < *D && token != NULL; k++){
-            /* convert ASCII string to floating-point number */
+            /* convert ASCII string to doubleing-point number */
             points[i][k] = strtod(token, &ptr);
             token = strtok(NULL, s);
         }
@@ -99,13 +99,12 @@ double **read_points(FILE *fd, int *N, int *D){
  * - dim: number of elements of s and d 
  */
 bool dominance(double *s, double *d, int dim){
-    bool strictly_minor = false;
     bool strictly_major = false;
     /* Iterate over each dimension: 
      * if s[i] < d[i] then s doesn't dominate d --> exit from loop and return */
-    for(int i = 0; i < dim && !strictly_minor; i++){
+    for(int i = 0; i < dim; i++){
         if(s[i] < d[i]){
-			strictly_minor = true;
+			return false;
 		}
         if(s[i] > d[i]){
 			strictly_major = true;
@@ -114,7 +113,7 @@ bool dominance(double *s, double *d, int dim){
     /* If there aren't elements strictly minor and exist at least on element
      * strictly major then s dominates d
      */
-    return !strictly_minor && strictly_major;
+    return strictly_major;
 }
 
 /* 
