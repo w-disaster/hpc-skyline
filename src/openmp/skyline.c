@@ -2,15 +2,15 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-#include "hpc.h"
+#include "lib/hpc.h"
 
-#define LINE_LENGHT 1024
+#define LINE_LENGHT 4000
 
 /* This function reads the points from a file descriptor and saves
  * them in the matrix "points". Also, it stores the dimension D and
  * the number of points N onto two int memory location.
  */
-long double** buildMatrix(FILE* fd, int* N, int* D){
+float* buildMatrix(FILE* fd, int* N, int* D){
     char line[LINE_LENGHT];
     const size_t BUFSIZE = sizeof(line);
     
@@ -27,8 +27,7 @@ long double** buildMatrix(FILE* fd, int* N, int* D){
     printf("%d\n", *N);
 
     /* Allocate the matrix */
-    long double **matrix = (long double**) malloc((*N) * sizeof(long double*));
-    for(int i = 0; i < (*N); i++) matrix[i] = (long double *) malloc((*D) * sizeof(long double));
+    float *matrix = (float*) malloc((*N) * (*D) * sizeof(float));
 
     char* str;
     const char* s = " ";
@@ -41,24 +40,28 @@ long double** buildMatrix(FILE* fd, int* N, int* D){
         token = strtok(str, s);
         for(int k = 0; k < *D && token != NULL; k++){
             /* convert ASCII string to floating-point number */
-            matrix[i][k] = strtod(token, &ptr);
+            matrix[i * (*D) + k] = strtod(token, &ptr);
             token = strtok(NULL, s);
         }
     }
     return matrix;
 }
 
-bool dominance(long double* s, long double *d, int dim){
+bool dominance(float* s, float *d, int dim){
     bool weakly_major = true;
     bool stricly_major = false;
     for(int i = 0; i < dim && weakly_major; i++){
-        if(s[i] < d[i]) weakly_major = false;
-        if(s[i] > d[i]) stricly_major = true;
+        if(s[i] < d[i]) {
+			weakly_major = false;
+		}
+        if(s[i] > d[i]) {
+			stricly_major = true;
+		}
     }
     return weakly_major && stricly_major;
 }
 
-bool* computeSkyline(long double** matrix, int rows, int cols){
+bool* computeSkyline(float* matrix, int rows, int cols){
     
     bool* S = (bool*) malloc(rows * sizeof(bool));
     int i, j;
@@ -66,16 +69,10 @@ bool* computeSkyline(long double** matrix, int rows, int cols){
     for(i = 0; i < rows; i++){
         if(S[i]){
             for(j = 0; j < rows; j++){
-               if(S[j] && dominance(matrix[i], matrix[j], cols)) S[j] = false;
+               if(S[j] && dominance(&matrix[i * cols], &matrix[j * cols], cols)) {
+					S[j] = false;
+				}
             }
-        }
-    }
-    for(i = 0; i < rows; i++){
-        if(S[i]){
-            for(j = 0; j < cols; j++){
-                printf("%Lf ", matrix[i][j]);
-            }
-            printf("\n");
         }
     }
     return S;
@@ -84,15 +81,27 @@ bool* computeSkyline(long double** matrix, int rows, int cols){
 int main(int argc, char* argv[]){
     int* D = (int*) malloc(sizeof(int));
     int* N = (int*) malloc(sizeof(int));
-    long double** skyline_matrix = buildMatrix(stdin, N, D);
+    float* skyline_matrix = buildMatrix(stdin, N, D);
     /*for(int i = 0; i < *N; i++){
         for(int k = 0; k < *D; k++){
             printf("%Lf ", skyline_matrix[i][k]);
         }
         printf("\n");
     }*/
-    double tstart = omp_get_wtime();
+    float tstart = hpc_gettime();
     bool* skyline = computeSkyline(skyline_matrix, *N, *D);
-    printf("Time: %lf\n", omp_get_wtime() - tstart);
+	float tend = hpc_gettime();    
+
+	int i, j;
+	for(i = 0; i < *N; i++){
+        if(skyline[i]){
+            for(j = 0; j < *D; j++){
+                printf("%f ", skyline_matrix[i * (*D) + j]);
+            }
+            printf("\n");
+        }
+    }
+
+    printf("Time: %lf\n", tend - tstart);
     return 0;
 }
