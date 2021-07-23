@@ -76,7 +76,7 @@ double* read_points(FILE* fd, int* N, int* D){
         /* Split the string read on s=" " separator and fetch the values */
         token = strtok(str, s);
         for(int k = 0; k < *D && token != NULL; k++){
-            /* convert ASCII string to floating-point number */
+            /* convert ASCII string to doubleing-point number */
             matrix[k * (*N) + i] = strtod(token, &ptr);
             token = strtok(NULL, s);
         }
