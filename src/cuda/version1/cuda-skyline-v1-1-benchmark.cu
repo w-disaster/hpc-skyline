@@ -43,7 +43,7 @@ double* build_matrix(FILE* fd, int* N, int* D){
         /* Split the string read on s=" " separator and fetch the values */
         token = strtok(str, s);
         for(int k = 0; k < *D && token != NULL; k++){
-            /* convert ASCII string to floating-point number */
+            /* convert ASCII string to doubleing-point number */
             matrix[i * (*D) + k] = strtod(token, &ptr);
             token = strtok(NULL, s);
         }
@@ -139,8 +139,8 @@ int main(int argc, char* argv[]){
 			double t_kernel_end = hpc_gettime();
 
 			cudaOccupancyMaxActiveBlocksPerMultiprocessor(&maxActiveBlocks, skyline, y_dim, 0);
-			float occupancy = (maxActiveBlocks * y_dim / props.warpSize) / 
-				(float)(props.maxThreadsPerMultiProcessor / 
+			double occupancy = (maxActiveBlocks * y_dim / props.warpSize) / 
+				(double)(props.maxThreadsPerMultiProcessor / 
 						props.warpSize);
 			//printf("y_dim: %d, occ: %f\n", y_dim, occupancy);
 			

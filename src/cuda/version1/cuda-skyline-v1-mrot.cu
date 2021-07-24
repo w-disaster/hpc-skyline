@@ -43,7 +43,7 @@ double* build_matrix(FILE* fd, int* N, int* D){
         /* Split the string read on s=" " separator and fetch the values */
         token = strtok(str, s);
         for(int k = 0; k < *D && token != NULL; k++){
-            /* convert ASCII string to floating-point number */
+            /* convert ASCII string to doubleing-point number */
             matrix[k * (*N) + i] = strtod(token, &ptr);
             token = strtok(NULL, s);
         }
@@ -156,7 +156,7 @@ int main(int argc, char* argv[]){
 	}
 
 	/* Print the time spent  by the kernel to determine the Skyline set */
-	float milliseconds = 0;
+	double milliseconds = 0;
 	cudaEventElapsedTime(&milliseconds, t_kernel_start, t_kernel_stop);	
 	printf("%f\n", milliseconds / 1000);
 	

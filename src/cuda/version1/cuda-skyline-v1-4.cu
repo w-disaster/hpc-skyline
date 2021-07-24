@@ -56,7 +56,7 @@
  * It returns the pointer to the allocated array containing the points.
  */
 
-float* read_points(FILE* fd, int* N, int* D){
+double* read_points(FILE* fd, int* N, int* D){
     char line[LINE_LENGHT];
     const size_t BUF_SIZE = sizeof(line);
 	    
@@ -73,7 +73,7 @@ float* read_points(FILE* fd, int* N, int* D){
     /* Allocate the matrix (N x D), where each line i contains the values
 	   of the points on that dimension i.
 	*/
-    float *matrix = (float*) malloc((*N) * (*D) * sizeof(float));
+    double *matrix = (double*) malloc((*N) * (*D) * sizeof(double));
 	
     char* str;
     const char* s = " ";
@@ -95,11 +95,11 @@ float* read_points(FILE* fd, int* N, int* D){
 
 /* Returns true if the array s dominates the array d. 
  * Parameters:
- * - s, d: arrays of float
+ * - s, d: arrays of double
  * - dim: number of elements of s and d
  * - offset: distance between two elements that we must read in array s, d
  */
-__device__ bool dominance(float *s, float *d, int dim, int offset){
+__device__ bool dominance(double *s, double *d, int dim, int offset){
     bool strictly_major = false;
     /* Iterate over each index: 
      * if s[i] < d[i] then s doesn't dominate d --> return */
@@ -123,7 +123,7 @@ __device__ bool dominance(float *s, float *d, int dim, int offset){
  * if any of them dominates it.
  * The result, in the end, is put in the array S, stored in the global memory. 
  */
-__global__ void compute_skyline(float *points, bool *S, int *k, int n, int d){
+__global__ void compute_skyline(double *points, bool *S, int *k, int n, int d){
 	const int y = blockIdx.y * blockDim.y + threadIdx.y;
 	if(y < n){
 		bool is_skyline_point = true;
@@ -152,7 +152,7 @@ __global__ void compute_skyline(float *points, bool *S, int *k, int n, int d){
  * - The cardinality K of the Skyline set;
  * - The Skyline set.
  */
-void print_skyline(FILE* fd, bool *S, float *points, int N, int D, int K){
+__host__ void print_skyline(FILE* fd, bool *S, double *points, int N, int D, int K){
     int i, j;
     /* Print D, K */
     fprintf(fd, "%d\n%d\n", D, K);
@@ -168,22 +168,19 @@ void print_skyline(FILE* fd, bool *S, float *points, int N, int D, int K){
     }
 }
 
-int main(int argc, char* argv[]){
-	float t_start = hpc_gettime();
-   	/* Allocate memory to store the number of points, them dimension and the points */
+int main(void){
+/* Allocate memory to store the number of points, them dimension and the points */
 	int* D = (int*) malloc(sizeof(int));
     int* N = (int*) malloc(sizeof(int));
 
-    double t_rp = hpc_gettime();
-    float* points = read_points(stdin, N, D);
-    printf("read: %lf\n", hpc_gettime() - t_rp);
-
+	double* points = read_points(stdin, N, D);
+   
 	/* - Define the matrix dimension, 
 	   - Allocate space on the device global memory 
 	   - Copy the array points on the allocated space
 	 */
-	const size_t size = (*N) * (*D) * sizeof(float);
-    float* d_points;
+	const size_t size = (*N) * (*D) * sizeof(double);
+    double* d_points;
 	cudaSafeCall(cudaMalloc((void**)&d_points, size));
 	cudaSafeCall(cudaMemcpy(d_points, points, size, cudaMemcpyHostToDevice));
 
@@ -201,10 +198,18 @@ int main(int argc, char* argv[]){
 	/* Define the block and grid dimensions */
 	dim3 block(1, WARP_SIZE * 2);
 	dim3 grid(1, ((*N) + WARP_SIZE * 2 - 1)/(WARP_SIZE * 2));
-		
+	
+	cudaEvent_t t_kernel_start, t_kernel_stop;
+	cudaEventCreate(&t_kernel_start);
+	cudaEventCreate(&t_kernel_stop);	
+
+	cudaEventRecord(t_kernel_start);
+	
 	/* Kernel function call to determine the Skyline set */
 	compute_skyline<<<grid, block>>>(d_points, d_S, d_K, *N, *D);
 	
+	cudaEventRecord(t_kernel_stop);
+
 	/* Wait the Kernel to finish and check errors */
 	cudaCheckError();	
 
@@ -212,7 +217,6 @@ int main(int argc, char* argv[]){
 	 * in order to store the result 
      */
 	S = (bool*) malloc((*N) * sizeof(bool));
-
 	
 	/* - Copy the result from device memory to host's
        - Copy the Skyline cardinality from device to host memory
@@ -231,7 +235,9 @@ int main(int argc, char* argv[]){
 	free(N);
     free(K);
 
-	/* Print the time spent  by the kernel to determine the Skyline set */
-	fprintf(stdout, "%lf\n", hpc_gettime() - t_start);	
-    return 0;
+	float milliseconds = 0;
+	cudaEventElapsedTime(&milliseconds, t_kernel_start, t_kernel_stop);	
+	fprintf(stdout, "%f\n", milliseconds / 1000);   
+	return 0;
 }
+
