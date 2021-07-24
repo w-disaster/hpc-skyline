@@ -170,8 +170,7 @@ __host__ void print_skyline(FILE* fd, bool *S, double *points, int N, int D, int
 
 int main(void){
     double t_start = hpc_gettime();
-    /* Allocate memory to store the number of points, them dimension and the points */
-	int* D = (int*) malloc(sizeof(int));
+    int* D = (int*) malloc(sizeof(int));
     int* N = (int*) malloc(sizeof(int));
 
 	double* points = read_points(stdin, N, D);
@@ -199,18 +198,18 @@ int main(void){
 	/* Define the block and grid dimensions */
 	dim3 block(1, WARP_SIZE * 2);
 	dim3 grid(1, ((*N) + WARP_SIZE * 2 - 1)/(WARP_SIZE * 2));
-	
+
 	/* Kernel function call to determine the Skyline set */
 	compute_skyline<<<grid, block>>>(d_points, d_S, d_K, *N, *D);
-
-    /* Wait the Kernel to finish and check errors */
-	cudaCheckError();	
-
-    /* While Kernel function is executing on device, allocate memory on heap 
+	
+	/* While Kernel function is executing on device, allocate memory on heap 
 	 * in order to store the result 
      */
 	S = (bool*) malloc((*N) * sizeof(bool));
 	
+	/* Wait the Kernel to finish and check errors */
+	cudaCheckError();	
+
 	/* - Copy the result from device memory to host's
        - Copy the Skyline cardinality from device to host memory
 	   - Print the points in the Skyline set 
