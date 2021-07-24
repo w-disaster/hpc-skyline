@@ -169,7 +169,8 @@ __host__ void print_skyline(FILE* fd, bool *S, double *points, int N, int D, int
 }
 
 int main(void){
-/* Allocate memory to store the number of points, them dimension and the points */
+	double t_start = hpc_gettime();
+	/* Allocate memory to store the number of points, them dimension and the points */
 	int* D = (int*) malloc(sizeof(int));
     int* N = (int*) malloc(sizeof(int));
 
@@ -198,26 +199,18 @@ int main(void){
 	/* Define the block and grid dimensions */
 	dim3 block(1, WARP_SIZE * 2);
 	dim3 grid(1, ((*N) + WARP_SIZE * 2 - 1)/(WARP_SIZE * 2));
-	
-	cudaEvent_t t_kernel_start, t_kernel_stop;
-	cudaEventCreate(&t_kernel_start);
-	cudaEventCreate(&t_kernel_stop);	
 
-	cudaEventRecord(t_kernel_start);
-	
 	/* Kernel function call to determine the Skyline set */
 	compute_skyline<<<grid, block>>>(d_points, d_S, d_K, *N, *D);
 	
-	cudaEventRecord(t_kernel_stop);
-
-	/* Wait the Kernel to finish and check errors */
-	cudaCheckError();	
-
-    /* While Kernel function is executing on device, allocate memory on heap 
+	/* While Kernel function is executing on device, allocate memory on heap 
 	 * in order to store the result 
      */
 	S = (bool*) malloc((*N) * sizeof(bool));
 	
+	/* Wait the Kernel to finish and check errors */
+	cudaCheckError();	
+
 	/* - Copy the result from device memory to host's
        - Copy the Skyline cardinality from device to host memory
 	   - Print the points in the Skyline set 
@@ -234,10 +227,6 @@ int main(void){
 	free(D);
 	free(N);
     free(K);
-
-	float milliseconds = 0;
-	cudaEventElapsedTime(&milliseconds, t_kernel_start, t_kernel_stop);	
-	fprintf(stdout, "%f\n", milliseconds / 1000);   
-	return 0;
+	fprintf(stdout, "%lf\n", hpc_gettime() - t_start);
 }
 
