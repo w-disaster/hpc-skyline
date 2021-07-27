@@ -40,6 +40,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <omp.h>
+#include "hpc.h"
 
 #define LINE_LENGHT 4000
 
@@ -202,6 +203,8 @@ void print_skyline(FILE* fd, bool *S, double **points, int N, int D, int K){
 }
 
 int main(void){
+    /* Record starting time */
+    double t_start = hpc_gettime();
     /* int pointers to store dimension D, cardinality N of the input set
      * and Skyline cardinality K.
      */
@@ -217,5 +220,10 @@ int main(void){
    
 	/* Print Skyline set */
 	print_skyline(stdout, skyline, points, *N, *D, *K);	
+
+    /* Print N, D, K and execution time on stderr */
+    fprintf(stderr,
+            "\n\t%d points\n\t%d dimension\n\t%d points in skyline\n\nExecution time %lf seconds\n",
+            *N, *D, *K, hpc_gettime() - t_start);
     return EXIT_SUCCESS;
 }

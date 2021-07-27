@@ -169,10 +169,12 @@ __host__ void print_skyline(FILE* fd, bool *S, double *points, int N, int D, int
 }
 
 int main(void){
+    /* Record starting time */
+    double t_start = hpc_gettime();
 	/* Allocate memory to store the number of points, them dimension and the points */
 	int* D = (int*) malloc(sizeof(int));
     int* N = (int*) malloc(sizeof(int));
-
+    /* Read points from stdin */
 	double* points = read_points(stdin, N, D);
    
 	/* - Define the matrix dimension, 
@@ -217,6 +219,11 @@ int main(void){
 	cudaSafeCall(cudaMemcpy(S, d_S, (*N) * sizeof(bool), cudaMemcpyDeviceToHost));
     cudaSafeCall(cudaMemcpy(K, d_K, sizeof(int), cudaMemcpyDeviceToHost));
     print_skyline(stdout, S, points, *N, *D, *K);
+
+    /* Print N, D, K and execution time on stderr */
+    fprintf(stderr,
+            "\n\t%d points\n\t%d dimensions\n\t%d points in skyline\n\nExecution time %lf (s)\n",
+            *N, *D, *K, hpc_gettime() - t_start);
 
 	return EXIT_SUCCESS;
 }
