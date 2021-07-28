@@ -70,10 +70,10 @@ double* read_points(FILE* fd, int* N, int* D){
     n = fgets(line, BUF_SIZE, fd);
     sscanf(n, "%d", N);
     
-    /* Allocate the matrix (N x D), where each line i contains the values
+    /* Allocate the matrix (D x N), where each line i contains the values
 	   of the points on that dimension i.
 	*/
-    double *matrix = (double*) malloc((*N) * (*D) * sizeof(double));
+    double *matrix = (double*) malloc((*D) * (*N) * sizeof(double));
 	
     char* str;
     const char* s = " ";
@@ -224,7 +224,6 @@ int main(void){
     fprintf(stderr,
             "\n\t%d points\n\t%d dimensions\n\t%d points in skyline\n\nExecution time %lf (s)\n",
             *N, *D, *K, hpc_gettime() - t_start);
-
 	return EXIT_SUCCESS;
 }
 

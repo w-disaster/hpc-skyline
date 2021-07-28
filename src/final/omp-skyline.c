@@ -223,7 +223,7 @@ int main(void){
 
     /* Print N, D, K and execution time on stderr */
     fprintf(stderr,
-            "\n\t%d points\n\t%d dimension\n\t%d points in skyline\n\nExecution time %lf seconds\n",
+            "\n\t%d points\n\t%d dimensions\n\t%d points in skyline\n\nExecution time %lf (s)\n",
             *N, *D, *K, hpc_gettime() - t_start);
-    return EXIT_SUCCESS;
+	return EXIT_SUCCESS;
 }
